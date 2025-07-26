@@ -1,0 +1,176 @@
+networks:
+  kafka-net:
+    driver: bridge
+
+volumes:
+  checkout_data:
+  payment_data:
+  shipping_data:
+  kafka_data:
+  zookeeper_data:
+
+services:
+  # Zookeeper para Kafka
+  zookeeper:
+    image: bitnami/zookeeper:3.8
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-net
+    volumes:
+      - zookeeper_data:/bitnami
+
+  # Broker Kafka
+  kafka:
+    image: bitnami/kafka:3.5
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LISTENER_PORT=9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_LOG_RETENTION_HOURS=-1 # manter mensagens indefinidamente
+    ports:
+      - "9092:9092"
+    networks:
+      - kafka-net
+    volumes:
+      - kafka_data:/bitnami
+
+  # Inicialização de tópicos Kafka
+  init-topics:
+    image: bitnami/kafka:3.5
+    depends_on:
+      - kafka
+      - zookeeper
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    volumes:
+      - ./create-topics.sh:/create-topics.sh
+    entrypoint: ["/bin/bash", "/create-topics.sh"]
+    networks:
+      - kafka-net
+
+  # Interface Web para Kafka (Kafka UI)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=kafka-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    ports:
+      - "8080:8080"
+    networks:
+      - kafka-net
+
+  # Banco de dados do Checkout (PostgreSQL)
+  checkout-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=checkout_user
+      - POSTGRES_PASSWORD=checkout_pass
+      - POSTGRES_DB=checkout_db
+    volumes:
+      - checkout_data:/var/lib/postgresql/data
+    networks:
+      - kafka-net
+
+  # Serviço de Checkout
+  checkout-service:
+    build: ./checkout-service
+    depends_on:
+      - checkout-db
+      - kafka
+    environment:
+      - DB_HOST=checkout-db
+      - DB_PORT=5432
+      - DB_NAME=checkout_db
+      - DB_USER=checkout_user
+      - DB_PASSWORD=checkout_pass
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8081:8080"
+    networks:
+      - kafka-net
+
+  # Banco de dados do Payment
+  payment-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=payment_user
+      - POSTGRES_PASSWORD=payment_pass
+      - POSTGRES_DB=payment_db
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+    networks:
+      - kafka-net
+
+  # Serviço de Payment
+  payment-service:
+    build: ./payment-service
+    depends_on:
+      - payment-db
+      - kafka
+    environment:
+      - DB_HOST=payment-db
+      - DB_PORT=5432
+      - DB_NAME=payment_db
+      - DB_USER=payment_user
+      - DB_PASSWORD=payment_pass
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8082:8080"
+    networks:
+      - kafka-net
+
+  # Banco de dados do Shipping
+  shipping-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=shipping_user
+      - POSTGRES_PASSWORD=shipping_pass
+      - POSTGRES_DB=shipping_db
+    volumes:
+      - shipping_data:/var/lib/postgresql/data
+    networks:
+      - kafka-net
+
+  # Serviço de Shipping
+  shipping-service:
+    build: ./shipping-service
+    depends_on:
+      - shipping-db
+      - kafka
+    environment:
+      - DB_HOST=shipping-db
+      - DB_PORT=5432
+      - DB_NAME=shipping_db
+      - DB_USER=shipping_user
+      - DB_PASSWORD=shipping_pass
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8083:8080"
+    networks:
+      - kafka-net
+
+  # BFF (Back-end for Frontend)
+  bff:
+    build: ./bff
+    depends_on:
+      - checkout-service
+      - payment-service
+      - shipping-service
+    environment:
+      - CHECKOUT_SERVICE_URL=http://checkout-service:8080
+      - PAYMENT_SERVICE_URL=http://payment-service:8080
+      - SHIPPING_SERVICE_URL=http://shipping-service:8080
+    ports:
+      - "3000:3000"
+    networks:
+      - kafka-net
