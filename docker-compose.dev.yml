@@ -1,0 +1,83 @@
+services:
+  checkout-service:
+    build:
+      context: ./checkout-service
+      dockerfile: Dockerfile
+      target: builder
+    volumes:
+      - ./checkout-service:/usr/src/app:delegated
+    command: npm run start:dev
+    env_file:
+      - ./checkout-service/.env
+    ports:
+      - "8081:8080"
+    networks:
+      - backend-net
+      - kafka-net
+      - checkout-db-net
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+      target: builder
+    volumes:
+      - ./payment-service:/usr/src/app:delegated
+    command: npm run start:dev
+    environment:
+      - DB_HOST=payment-db
+      - DB_PORT=5432
+      - DB_NAME=payment_db
+      - DB_USER=payment_user
+      - DB_PASSWORD=payment_pass
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8082:8080"
+    networks:
+      - backend-net
+      - kafka-net
+      - payment-db-net
+
+  shipping-service:
+    build:
+      context: ./shipping-service
+      dockerfile: Dockerfile
+      target: builder
+    volumes:
+      - ./shipping-service:/usr/src/app:delegated
+    command: npm run start:dev
+    environment:
+      - DB_HOST=shipping-db
+      - DB_PORT=5432
+      - DB_NAME=shipping_db
+      - DB_USER=shipping_user
+      - DB_PASSWORD=shipping_pass
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "8083:8080"
+    networks:
+      - backend-net
+      - kafka-net
+      - shipping-db-net
+
+  bff:
+    build:
+      context: ./bff
+      dockerfile: Dockerfile
+      target: builder
+    volumes:
+      - ./bff:/usr/src/app:delegated
+    command: npm run start:dev
+    env_file:
+      - ./bff/.env
+    ports:
+      - "3000:3000"
+    networks:
+      - backend-net
+
+networks:
+  kafka-net:
+  backend-net:
+  checkout-db-net:
+  payment-db-net:
+  shipping-db-net:

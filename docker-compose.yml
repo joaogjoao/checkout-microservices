@@ -1,6 +1,14 @@
 networks:
   kafka-net:
     driver: bridge
+  backend-net:
+    driver: bridge
+  checkout-db-net:
+    driver: bridge
+  payment-db-net:
+    driver: bridge
+  shipping-db-net:
+    driver: bridge
 
 volumes:
   checkout_data:
@@ -28,6 +36,7 @@ services:
     depends_on:
       - zookeeper
     environment:
+      - KAFKA_BROKER_ID=1               # define um ID fixo
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
       - KAFKA_LISTENER_NAME=PLAINTEXT
@@ -37,12 +46,11 @@ services:
       - KAFKA_LOG_RETENTION_HOURS=-1 # manter mensagens indefinidamente
     ports:
       - "9092:9092"
-    networks:
-      - kafka-net
+    networks: [kafka-net, backend-net]
     volumes:
       - kafka_data:/bitnami
 
-  # Inicialização de tópicos Kafka
+  #Inicialização de tópicos Kafka
   init-topics:
     image: bitnami/kafka:3.5
     depends_on:
@@ -79,7 +87,9 @@ services:
     volumes:
       - checkout_data:/var/lib/postgresql/data
     networks:
-      - kafka-net
+      - checkout-db-net
+    ports:
+      - "5432:5432"
 
   # Serviço de Checkout
   checkout-service:
@@ -87,17 +97,11 @@ services:
     depends_on:
       - checkout-db
       - kafka
-    environment:
-      - DB_HOST=checkout-db
-      - DB_PORT=5432
-      - DB_NAME=checkout_db
-      - DB_USER=checkout_user
-      - DB_PASSWORD=checkout_pass
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    env_file:
+      - ./checkout-service/.env
     ports:
       - "8081:8080"
-    networks:
-      - kafka-net
+    networks: [backend-net, kafka-net, checkout-db-net]
 
   # Banco de dados do Payment
   payment-db:
@@ -109,7 +113,9 @@ services:
     volumes:
       - payment_data:/var/lib/postgresql/data
     networks:
-      - kafka-net
+      - payment-db-net
+    ports:
+      - "5433:5432"
 
   # Serviço de Payment
   payment-service:
@@ -117,17 +123,11 @@ services:
     depends_on:
       - payment-db
       - kafka
-    environment:
-      - DB_HOST=payment-db
-      - DB_PORT=5432
-      - DB_NAME=payment_db
-      - DB_USER=payment_user
-      - DB_PASSWORD=payment_pass
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    env_file:
+      - ./payment-service/.env
     ports:
       - "8082:8080"
-    networks:
-      - kafka-net
+    networks: [backend-net, kafka-net, payment-db-net]
 
   # Banco de dados do Shipping
   shipping-db:
@@ -139,7 +139,9 @@ services:
     volumes:
       - shipping_data:/var/lib/postgresql/data
     networks:
-      - kafka-net
+      - shipping-db-net
+    ports:
+      - "5434:5432"
 
   # Serviço de Shipping
   shipping-service:
@@ -147,17 +149,11 @@ services:
     depends_on:
       - shipping-db
       - kafka
-    environment:
-      - DB_HOST=shipping-db
-      - DB_PORT=5432
-      - DB_NAME=shipping_db
-      - DB_USER=shipping_user
-      - DB_PASSWORD=shipping_pass
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    env_file:
+      - ./shipping-service/.env
     ports:
       - "8083:8080"
-    networks:
-      - kafka-net
+    networks: [backend-net, kafka-net, shipping-db-net]
 
   # BFF (Back-end for Frontend)
   bff:
@@ -166,11 +162,9 @@ services:
       - checkout-service
       - payment-service
       - shipping-service
-    environment:
-      - CHECKOUT_SERVICE_URL=http://checkout-service:8080
-      - PAYMENT_SERVICE_URL=http://payment-service:8080
-      - SHIPPING_SERVICE_URL=http://shipping-service:8080
+    env_file:
+      - ./bff/.env
     ports:
       - "3000:3000"
     networks:
-      - kafka-net
+      - backend-net

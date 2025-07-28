@@ -1,38 +1,42 @@
-# 1) Build stage usando sempre a última versão do Node
+# 1) Build stage (com todas as dependências, incluindo devDependencies)
 FROM node:latest AS builder
 
-# Define diretório de trabalho
+# Defina o contexto e variáveis de ambiente
 WORKDIR /usr/src/app
+ENV NODE_ENV=development
 
-# Copia apenas os manifestos para instalar dependências
+# Copia apenas manifestos para cache de dependências
 COPY package.json package-lock.json ./
 
-# Instala dependências exatamente conforme package-lock (sem node_modules local)
+# Instala tudo (dev + prod)
 RUN npm ci
 
-# Copia todo o resto do código e assets
+# Copia o restante do código
 COPY . .
 
-# Compila TypeScript para JavaScript em dist/
+# Compila o TypeScript
 RUN npm run build
 
-# 2) Runtime stage enxuto
+# 2) Runtime stage (somente produção)
 FROM node:latest AS runner
 
 WORKDIR /usr/src/app
+ENV NODE_ENV=production
 
-# Copia manifestos novamente e instala apenas produção
+# Copia somente manifestos para instalar só prod deps
 COPY package.json package-lock.json ./
-RUN npm ci --production
 
-# Puxa o build compilado do builder
+# Instala apenas produção
+RUN npm ci --only=production
+
+# (Opcional) copie seu .env local se quiser ter valores padrão
+# COPY .env.example .env
+
+# Traga o build pronto
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Se existirem assets estáticos, por exemplo:
-# COPY --from=builder /usr/src/app/public ./public
-
-# Exponha a porta usada pela aplicação (ajuste se diferente, ex: 3000 para BFF)
+# Expõe a porta da aplicação
 EXPOSE 8080
 
-# Comando padrão para iniciar o NestJS
+# Comando para iniciar em produção
 CMD ["node", "dist/main.js"]
