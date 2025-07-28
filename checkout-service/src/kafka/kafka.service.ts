@@ -2,7 +2,7 @@
 
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Kafka, Producer } from 'kafkajs';
-import { CheckoutCreatedMessage } from 'src/dtos/checkout-created-message.dto';
+import { CheckoutCreatedMessage } from 'src/domain/dtos/messages/checkout-created-message.dto';
 
 @Injectable()
 export class KafkaService implements OnModuleInit, OnModuleDestroy {

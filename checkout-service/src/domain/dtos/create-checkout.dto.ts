@@ -1,11 +1,6 @@
 import { IsArray, ValidateNested, IsNumber, IsString, ValidateIf, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  PIX = 'pix',
-  DEBIT = 'debit'
-}
+import { PaymentMethod } from '../enums/payment-method.enum';
 
 export class CreateCheckoutItemDto {
   @IsString()
@@ -34,7 +29,7 @@ export class CreateAddressDto {
 export class CreatePaymentDto {
   @IsEnum(PaymentMethod, { message: 'paymentMethod must be a valid PaymentMethod' })
   paymentMethod: PaymentMethod;
-  
+
   @ValidateIf(o => o.paymentMethod === PaymentMethod.CREDIT_CARD)
   @IsString()
   cardNumber?: string;

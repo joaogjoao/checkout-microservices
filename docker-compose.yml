@@ -36,35 +36,19 @@ services:
     depends_on:
       - zookeeper
     environment:
-      - KAFKA_BROKER_ID=1               # define um ID fixo
+      - KAFKA_BROKER_ID=1 
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
       - KAFKA_LISTENER_NAME=PLAINTEXT
       - KAFKA_LISTENER_PORT=9092
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_LOG_RETENTION_HOURS=-1 # manter mensagens indefinidamente
+      - KAFKA_LOG_RETENTION_HOURS=-1 
     ports:
       - "9092:9092"
     networks: [kafka-net, backend-net]
     volumes:
       - kafka_data:/bitnami
-
-  #Inicialização de tópicos Kafka
-  init-topics:
-    image: bitnami/kafka:3.5
-    depends_on:
-      - kafka
-      - zookeeper
-    environment:
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-    volumes:
-      - ./create-topics.sh:/create-topics.sh
-    entrypoint: ["/bin/bash", "/create-topics.sh"]
-    networks:
-      - kafka-net
 
   # Interface Web para Kafka (Kafka UI)
   kafka-ui:

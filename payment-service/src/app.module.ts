@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Payment } from './entities/payment.entity';
+import { Payment } from './domain/entities/payment.entity';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PaymentEventController } from './controllers/payment-event.controller';
 import { PaymentService } from './services/payment.service';

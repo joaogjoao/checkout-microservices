@@ -1,13 +1,13 @@
-// src/app.module.ts
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CheckoutController } from './controllers/checkout.controller';
 import { CheckoutService } from './services/checkout.service';
-import { Checkout } from './entities/checkout.entity';
+import { Checkout } from './domain/entities/checkout.entity';
 import { CheckoutEventsController } from './controllers/checkout-events.controller';
+import { CheckoutItem } from './domain/entities/checkout-item.entity';
+import { Address } from './domain/entities/address.entity';
 
 @Module({
   imports: [
@@ -15,8 +15,6 @@ import { CheckoutEventsController } from './controllers/checkout-events.controll
       isGlobal: true,
       envFilePath: '.env',
     }),
-
-    // Conexão com Postgres
     TypeOrmModule.forRootAsync({
       useFactory: () => ({
         type: 'postgres',
@@ -25,15 +23,11 @@ import { CheckoutEventsController } from './controllers/checkout-events.controll
         username: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
-        entities: [Checkout],
+        entities: [Checkout, CheckoutItem, Address],
         synchronize: true,
       }),
     }),
-
-    // Registra o repositório
-    TypeOrmModule.forFeature([Checkout]),
-
-    // Kafka client provider
+    TypeOrmModule.forFeature([Checkout, CheckoutItem, Address]),
     ClientsModule.register([
       {
         name: 'KAFKA_SERVICE',

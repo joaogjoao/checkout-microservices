@@ -5,6 +5,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ShippingEventController } from './controllers/shipping-event.controller';
 import { ShippingService } from './services/shipping.service';
 import { Shipping } from './entities/shipping.entity';
+import { Address } from './entities/address.entity';
+import { ShippingController } from './controllers/shipping.controller';
 
 @Module({
   imports: [
@@ -17,11 +19,11 @@ import { Shipping } from './entities/shipping.entity';
         username: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
-        entities: [Shipping],
+        entities: [Shipping, Address],
         synchronize: true,
       }),
     }),
-    TypeOrmModule.forFeature([Shipping]),
+    TypeOrmModule.forFeature([Shipping, Address]),
     ClientsModule.register([
       {
         name: 'KAFKA_SERVICE',
@@ -37,7 +39,7 @@ import { Shipping } from './entities/shipping.entity';
       },
     ]),
   ],
-  controllers: [ShippingEventController],
+  controllers: [ShippingEventController, ShippingController],
   providers: [ShippingService],
 })
 export class AppModule {}

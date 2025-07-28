@@ -7,9 +7,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,      // remove propriedades não declaradas no DTO
-    forbidNonWhitelisted: true, // retorna erro se houver props extras
-    transform: true,      // converte tipos (ex.: string → number)
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
   }));
 
   app.connectMicroservice({

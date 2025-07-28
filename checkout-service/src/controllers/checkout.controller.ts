@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get, Param } from '@nestjs/common';
 import { CheckoutService } from '../services/checkout.service';
-import { CreateCheckoutDto } from '../dtos/create-checkout.dto';
+import { CreateCheckoutDto } from '../domain/dtos/create-checkout.dto';
 
 @Controller('checkout')
 export class CheckoutController {

@@ -1,13 +1,19 @@
 import { Injectable, Inject, OnModuleInit, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Checkout, CheckoutStatus } from '../entities/checkout.entity';
-import { CreateCheckoutDto } from '../dtos/create-checkout.dto';
-import { v4 as uuid } from 'uuid';
+import { Checkout } from '../domain/entities/checkout.entity';
+import { CreateCheckoutDto } from '../domain/dtos/create-checkout.dto';
 import { ClientKafka } from '@nestjs/microservices';
-import { PaymentRejectedEventDto } from 'src/dtos/payment-rejected-event.dto';
-import { ShippingCompletedEventDto } from 'src/dtos/shipping-completed-event.dto';
-import { CheckoutCreatedMessage } from 'src/dtos/checkout-created-message.dto';
+import { PaymentRejectedEventDto } from 'src/domain/dtos/events/payment-rejected-event.dto';
+import { ShippingCompletedEventDto } from 'src/domain/dtos/events/shipping-completed-event.dto';
+import { CheckoutCreatedMessage } from 'src/domain/dtos/messages/checkout-created-message.dto';
+import { PaymentStatus } from 'src/domain/enums/payment-status.enum';
+import { PaymentApprovedEventDto } from 'src/domain/dtos/events/payment-approved-event.dto';
+import { CheckoutPaidMessage } from 'src/domain/dtos/messages/checkout-paid-message.dto';
+import { Address } from 'src/domain/entities/address.entity';
+import { CheckoutStatus } from 'src/domain/enums/checkout-status.enum';
+import { ShippingStatus } from 'src/domain/enums/shipping-status.enum';
+import { ShippingEventDto } from 'src/domain/dtos/events/shipping-event.dto';
 
 @Injectable()
 export class CheckoutService implements OnModuleInit {
@@ -22,46 +28,118 @@ export class CheckoutService implements OnModuleInit {
   }
 
   async createCheckout(dto: CreateCheckoutDto): Promise<Checkout> {
-    const entity = this.repo.create({ id: uuid(), ...dto});
-    const saved = await this.repo.save(entity);
-    console.log('Checkout created:', saved);
+    const checkout = this.createCheckoutFromDto(dto);
 
-    const message: CheckoutCreatedMessage = {
-      id: saved.id,
-      items: saved.items,
-      total: saved.total,
-      address: saved.address,
-      status: saved.status,
-    };
-    
-    await this.kafkaClient.emit('checkout.created', message);
+    const saved = await this.repo.save(checkout);
+
+    const message: CheckoutCreatedMessage = this.createCheckoutMessage(saved, dto);
+
+    this.kafkaClient.emit('checkout.created', message);
 
     return saved;
   }
 
   async findById(id: string): Promise<Checkout> {
-    const checkout = await this.repo.findOneBy({ id });
+    const checkout = await this.repo.findOne({
+      where: { id },
+      relations: ['items', 'address'],
+    });
     if (!checkout) throw new NotFoundException(`Checkout ${id} não encontrado`);
     return checkout;
   }
 
-  async handlePaymentRejected(event: PaymentRejectedEventDto): Promise<Checkout> {
-    const { checkoutId, reason } = event;
-    const checkout = await this.repo.findOne({ where: { id: checkoutId } });
-    if (!checkout) throw new NotFoundException(`Checkout ${checkoutId} não encontrado`);
+  async handlePaymentRejected(event: PaymentRejectedEventDto): Promise<void> {
+    const checkout = await this.repo.findOne({
+      where: { id: event.checkoutId },
+      relations: ['items', 'address'],
+    });
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
 
-    checkout.status = CheckoutStatus.PAYMENT_REJECTED;
-    checkout.paymentReason = reason;
-    return this.repo.save(checkout);
+    checkout.paymentFailureReason = event.reason;
+    checkout.paymentStatus = PaymentStatus.REJECTED;
+    checkout.status = CheckoutStatus.OPEN;
+
+    await this.repo.save(checkout);
   }
 
-  async handleShippingCompleted(event: ShippingCompletedEventDto): Promise<Checkout> {
-    const { checkoutId, trackingCode } = event;
-    const checkout = await this.repo.findOne({ where: { id: checkoutId } });
-    if (!checkout) throw new NotFoundException(`Checkout ${checkoutId} não encontrado`);
+  async handlePaymentApproved(event: PaymentApprovedEventDto): Promise<void> {
+    const checkout = await this.repo.findOne({
+      where: { id: event.checkoutId },
+      relations: ['items', 'address'],
+    });
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
+
+    checkout.paymentStatus = PaymentStatus.APPROVED;
+
+    await this.repo.save(checkout);
+    const message: CheckoutPaidMessage = this.createCheckoutPaidMessage(event, checkout.address);
+    this.kafkaClient.emit('checkout.paid', message);
+  }
+
+  async handleShipped(event: ShippingEventDto): Promise<void> {
+    const checkout = await this.repo.findOne({
+      where: { id: event.checkoutId },
+      relations: ['items', 'address'],
+    });
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
+
+    checkout.shippingStatus = ShippingStatus.SHIPPED;
+    checkout.trackingCode = event.trackingCode;
+    checkout.shippingId = event.shippingId;
+    await this.repo.save(checkout);
+  }
+
+  async handleShippingCompleted(event: ShippingCompletedEventDto): Promise<void> {
+    const checkout = await this.repo.findOne({
+      where: { id: event.checkoutId },
+      relations: ['items', 'address'],
+    });
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
 
     checkout.status = CheckoutStatus.COMPLETED;
-    checkout.trackingCode = trackingCode;
-    return this.repo.save(checkout);
+    checkout.shippingStatus = ShippingStatus.DELIVERED;
+    checkout.closedAt = new Date();
+    await this.repo.save(checkout);
   }
+
+  private createCheckoutFromDto(dto: CreateCheckoutDto): Checkout {
+    const checkout = this.repo.create({
+      total: dto.total,
+      items: dto.items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+      address: {
+        ...dto.address,
+      },
+    });
+    return checkout;
+  }
+
+  private createCheckoutMessage(saved: Checkout, dto: CreateCheckoutDto): CheckoutCreatedMessage {
+    const message: CheckoutCreatedMessage = {
+      id: saved.id,
+      total: saved.total,
+      paymentMethod: dto.payment.paymentMethod,
+      paymentInfo: {
+        cardNumber: dto.payment.cardNumber,
+        pixKey: dto.payment.pixKey,
+        debitAccount: dto.payment.debitAccount,
+      }
+    };
+    return message;
+  }
+
+  private createCheckoutPaidMessage(event: PaymentApprovedEventDto, address: Address): CheckoutPaidMessage {
+    const message: CheckoutPaidMessage = {
+      id: event.checkoutId,
+      address: address
+    };
+
+    return message;
+  }
+
 }
+
+

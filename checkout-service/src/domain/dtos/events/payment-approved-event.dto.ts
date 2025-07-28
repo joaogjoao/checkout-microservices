@@ -1,4 +1,4 @@
-export class PaymentApprovedEventDto {
+export interface PaymentApprovedEventDto {
   checkoutId: string;
   paymentId: string;
   amount: number;

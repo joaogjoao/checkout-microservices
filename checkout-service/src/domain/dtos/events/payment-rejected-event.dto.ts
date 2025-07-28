@@ -1,4 +1,4 @@
-export class PaymentRejectedEventDto {
+export interface PaymentRejectedEventDto {
   checkoutId: string;
   paymentId: string;
   reason: string;
