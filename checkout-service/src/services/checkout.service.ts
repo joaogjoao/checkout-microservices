@@ -4,17 +4,18 @@ import { Repository } from 'typeorm';
 import { Checkout } from '../domain/entities/checkout.entity';
 import { CreateCheckoutDto } from '../domain/dtos/create-checkout.dto';
 import { ClientKafka } from '@nestjs/microservices';
-import { PaymentRejectedEventDto } from 'src/domain/dtos/events/payment-rejected-event.dto';
-import { ShippingCompletedEventDto } from 'src/domain/dtos/events/shipping-completed-event.dto';
-import { CheckoutCreatedMessage } from 'src/domain/dtos/messages/checkout-created-message.dto';
-import { PaymentStatus } from 'src/domain/enums/payment-status.enum';
-import { PaymentApprovedEventDto } from 'src/domain/dtos/events/payment-approved-event.dto';
-import { CheckoutPaidMessage } from 'src/domain/dtos/messages/checkout-paid-message.dto';
-import { Address } from 'src/domain/entities/address.entity';
-import { CheckoutStatus } from 'src/domain/enums/checkout-status.enum';
-import { ShippingStatus } from 'src/domain/enums/shipping-status.enum';
-import { ShippingEventDto } from 'src/domain/dtos/events/shipping-event.dto';
-import { CheckoutResponseDto } from 'src/domain/dtos/checkout-response.dto';
+import { PaymentRejectedEventDto } from '../domain/dtos/events/payment-rejected-event.dto';
+import { ShippingCompletedEventDto } from '../domain/dtos/events/shipping-completed-event.dto';
+import { CheckoutCreatedMessage } from '../domain/dtos/messages/checkout-created-message.dto';
+import { PaymentStatus } from '../domain/enums/payment-status.enum';
+import { PaymentApprovedEventDto } from '../domain/dtos/events/payment-approved-event.dto';
+import { CheckoutPaidMessage } from '../domain/dtos/messages/checkout-paid-message.dto';
+import { Address } from '../domain/entities/address.entity';
+import { CheckoutStatus } from '../domain/enums/checkout-status.enum';
+import { ShippingStatus } from '../domain/enums/shipping-status.enum';
+import { ShippingEventDto } from '../domain/dtos/events/shipping-event.dto';
+import { CheckoutResponseDto } from '../domain/dtos/checkout-response.dto';
+import { CreateCheckoutResponseDto } from '../domain/dtos/create-checkout-response.dto';
 
 @Injectable()
 export class CheckoutService implements OnModuleInit {
@@ -28,7 +29,7 @@ export class CheckoutService implements OnModuleInit {
     await this.kafkaClient.connect();
   }
 
-  async createCheckout(dto: CreateCheckoutDto): Promise<Checkout | null> {
+  async createCheckout(dto: CreateCheckoutDto): Promise<CreateCheckoutResponseDto | null> {
     try {
       const checkout = this.createCheckoutFromDto(dto);
 
@@ -38,9 +39,12 @@ export class CheckoutService implements OnModuleInit {
 
       this.kafkaClient.emit('checkout.created', message);
 
-      return saved;
+       return {
+                id: saved.id,
+                status: saved.status,
+                total: saved.total
+            };
     } catch (error) {
-      console.error('Error creating checkout:', error);
       return null;
     }
   }
@@ -65,12 +69,11 @@ export class CheckoutService implements OnModuleInit {
         trackingCode: checkout.trackingCode,
       };
     } catch (error) {
-      console.error('Error finding checkout:', error);
       throw new NotFoundException(`Checkout ${id} not found`);
     }
   }
 
-  async handlePaymentRejected(event: PaymentRejectedEventDto): Promise<void> {
+  async handlePaymentRejected(event: PaymentRejectedEventDto): Promise<string> {
     const checkout = await this.repo.findOne({
       where: { id: event.checkoutId }
     });
@@ -81,9 +84,10 @@ export class CheckoutService implements OnModuleInit {
     checkout.status = CheckoutStatus.OPEN;
 
     await this.repo.save(checkout);
+    return "Payment rejected";
   }
 
-  async handlePaymentApproved(event: PaymentApprovedEventDto): Promise<void> {
+  async handlePaymentApproved(event: PaymentApprovedEventDto): Promise<string> {
     const checkout = await this.repo.findOne({
       where: { id: event.checkoutId },
       relations: ['address'],
@@ -95,9 +99,10 @@ export class CheckoutService implements OnModuleInit {
     await this.repo.save(checkout);
     const message: CheckoutPaidMessage = this.createCheckoutPaidMessage(event, checkout.address);
     this.kafkaClient.emit('checkout.paid', message);
+    return "Payment approved and checkout updated successfully";
   }
 
-  async handleShipped(event: ShippingEventDto): Promise<void> {
+  async handleShipped(event: ShippingEventDto): Promise<string> {
     const checkout = await this.repo.findOne({
       where: { id: event.checkoutId }
     });
@@ -107,9 +112,10 @@ export class CheckoutService implements OnModuleInit {
     checkout.trackingCode = event.trackingCode;
     checkout.shippingId = event.shippingId;
     await this.repo.save(checkout);
+    return "Shipping event processed successfully";
   }
 
-  async handleShippingCompleted(event: ShippingCompletedEventDto): Promise<void> {
+  async handleShippingCompleted(event: ShippingCompletedEventDto): Promise<string> {
     const checkout = await this.repo.findOne({
       where: { id: event.checkoutId }
     });
@@ -119,6 +125,7 @@ export class CheckoutService implements OnModuleInit {
     checkout.shippingStatus = ShippingStatus.DELIVERED;
     checkout.closedAt = new Date();
     await this.repo.save(checkout);
+    return "Shipping completed and checkout updated successfully";
   }
 
   private createCheckoutFromDto(dto: CreateCheckoutDto): Checkout {

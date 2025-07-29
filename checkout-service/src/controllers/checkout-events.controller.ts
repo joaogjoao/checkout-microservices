@@ -15,7 +15,6 @@ export class CheckoutEventsController {
     @Payload() data: PaymentRejectedEventDto,
     @Ctx() context: KafkaContext,
   ) {
-    console.log('Payment rejected event received:', data);
     return this.checkoutService.handlePaymentRejected(data);
   }
   
@@ -24,7 +23,6 @@ export class CheckoutEventsController {
     @Payload() data: PaymentApprovedEventDto,
     @Ctx() context: KafkaContext,
   ) {
-    console.log('Payment approved event received:', data);
     return this.checkoutService.handlePaymentApproved(data);
   }
 
@@ -33,7 +31,6 @@ export class CheckoutEventsController {
     @Payload() data: ShippingEventDto,
     @Ctx() context: KafkaContext,
   ) {
-    console.log('Shipping event received:', data);
     return this.checkoutService.handleShipped(data);
   }
 
@@ -42,7 +39,6 @@ export class CheckoutEventsController {
     @Payload() data: ShippingCompletedEventDto,
     @Ctx() context: KafkaContext,
   ) {
-    console.log('Shipping completed event received:', data);
     return this.checkoutService.handleShippingCompleted(data);
   }
 }
