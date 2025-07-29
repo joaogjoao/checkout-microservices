@@ -48,10 +48,9 @@ export class CheckoutService implements OnModuleInit {
   async findById(id: string): Promise<CheckoutResponseDto> {
     try {
       const checkout = await this.repo.findOne({
-        where: { id },
-        relations: ['items', 'address'],
+        where: { id }
       });
-      if (!checkout) throw new NotFoundException(`Checkout ${id} não encontrado`);
+      if (!checkout) throw new NotFoundException(`Checkout ${id} not found`);
 
       return {
         id: checkout.id,
@@ -67,16 +66,15 @@ export class CheckoutService implements OnModuleInit {
       };
     } catch (error) {
       console.error('Error finding checkout:', error);
-      throw new NotFoundException(`Checkout ${id} não encontrado`);
+      throw new NotFoundException(`Checkout ${id} not found`);
     }
   }
 
   async handlePaymentRejected(event: PaymentRejectedEventDto): Promise<void> {
     const checkout = await this.repo.findOne({
-      where: { id: event.checkoutId },
-      relations: ['items', 'address'],
+      where: { id: event.checkoutId }
     });
-    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} not found`);
 
     checkout.paymentFailureReason = event.reason;
     checkout.paymentStatus = PaymentStatus.REJECTED;
@@ -88,9 +86,9 @@ export class CheckoutService implements OnModuleInit {
   async handlePaymentApproved(event: PaymentApprovedEventDto): Promise<void> {
     const checkout = await this.repo.findOne({
       where: { id: event.checkoutId },
-      relations: ['items', 'address'],
+      relations: ['address'],
     });
-    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} not found`);
 
     checkout.paymentStatus = PaymentStatus.APPROVED;
 
@@ -101,10 +99,9 @@ export class CheckoutService implements OnModuleInit {
 
   async handleShipped(event: ShippingEventDto): Promise<void> {
     const checkout = await this.repo.findOne({
-      where: { id: event.checkoutId },
-      relations: ['items', 'address'],
+      where: { id: event.checkoutId }
     });
-    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} not found`);
 
     checkout.shippingStatus = ShippingStatus.SHIPPED;
     checkout.trackingCode = event.trackingCode;
@@ -114,10 +111,9 @@ export class CheckoutService implements OnModuleInit {
 
   async handleShippingCompleted(event: ShippingCompletedEventDto): Promise<void> {
     const checkout = await this.repo.findOne({
-      where: { id: event.checkoutId },
-      relations: ['items', 'address'],
+      where: { id: event.checkoutId }
     });
-    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} não encontrado`);
+    if (!checkout) throw new NotFoundException(`Checkout ${event.checkoutId} not found`);
 
     checkout.status = CheckoutStatus.COMPLETED;
     checkout.shippingStatus = ShippingStatus.DELIVERED;

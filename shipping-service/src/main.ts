@@ -17,7 +17,6 @@ async function bootstrap() {
     },
   });
 
-  // inicializa todos os microservices antes do HTTP
   await app.startAllMicroservices();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
