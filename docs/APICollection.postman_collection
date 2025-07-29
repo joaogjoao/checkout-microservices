@@ -1,0 +1,375 @@
+{
+	"info": {
+		"_postman_id": "bd72bf1d-9759-4122-b030-e3c68d5d89c2",
+		"name": "E‑Commerce Checkout Microservices",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7159421"
+	},
+	"item": [
+		{
+			"name": "BFF",
+			"item": [
+				{
+					"name": "REJECTED",
+					"item": [
+						{
+							"name": "checkout - PIX",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-006\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 501.00\r\n    }\r\n  ],\r\n  \"total\": 1002.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"pix\",\r\n    \"pixKey\": \"email@email.com\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "checkout - CREDIT",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-005\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 501.00\r\n    }\r\n  ],\r\n  \"total\": 1002.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"credit_card\",\r\n    \"cardNumber\": \"4111111111111111\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "checkout - DEBIT",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-004\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 501.00\r\n    }\r\n  ],\r\n  \"total\": 1002.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"debit\",\r\n    \"debitAccount\": \"123456\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Calls that the payment will be rejected"
+				},
+				{
+					"name": "APPROVED",
+					"item": [
+						{
+							"name": "checkout - PIX",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-002\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 50.00\r\n    }\r\n  ],\r\n  \"total\": 100.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"pix\",\r\n    \"pixKey\": \"email@email.com\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "checkout - CREDIT",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-001\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 50.00\r\n    }\r\n  ],\r\n  \"total\": 100.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"credit_card\",\r\n    \"cardNumber\": \"4111111111111111\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "checkout - DEBIT",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-003\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 50.00\r\n    }\r\n  ],\r\n  \"total\": 100.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"debit\",\r\n    \"debitAccount\": \"233456\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Calls that the payment will be approved"
+				},
+				{
+					"name": "BadRequest",
+					"item": [
+						{
+							"name": "checkout - PIX",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-006\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 501.00\r\n    }\r\n  ],\r\n  \"total\": 1002.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"pix\",\r\n    \"cardNumber\": \"44444444444\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "checkout - CREDIT",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-005\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 501.00\r\n    }\r\n  ],\r\n  \"total\": 1002.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"credit_card\",\r\n    \"debitAccount\": \"aaaaaaa\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "checkout - DEBIT",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"prod-004\",\r\n      \"quantity\": 2,\r\n      \"unitPrice\": 501.00\r\n    }\r\n  ],\r\n  \"total\": 1002.00,\r\n  \"address\": {\r\n    \"street\": \"Rua das Palmeiras, 123\",\r\n    \"city\": \"São Paulo\",\r\n    \"state\": \"SP\",\r\n    \"zip\": \"01234-567\",\r\n    \"country\": \"Brasil\"\r\n  },\r\n  \"payment\": {\r\n    \"paymentMethod\": \"debit\",\r\n    \"pixKey\": \"123456\"\r\n  }\r\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/bff/checkout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"bff",
+										"checkout"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Calls that return Bad Request"
+				},
+				{
+					"name": "checkout/:id",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/bff/checkout/36feb1db-446e-4f85-9dcd-9f94229853ba",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"bff",
+								"checkout",
+								"36feb1db-446e-4f85-9dcd-9f94229853ba"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Shipping",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/bff/shipping/b306167d-fedf-42b7-a040-dc3732a2d438/complete",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"bff",
+								"shipping",
+								"b306167d-fedf-42b7-a040-dc3732a2d438",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
