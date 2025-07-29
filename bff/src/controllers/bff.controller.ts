@@ -86,7 +86,7 @@ export class BffController {
   @ApiParam({
     name: 'id',
     description: 'The ID of the shipping to complete',
-    example: 'ship-123'
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
   @ApiResponse({
     status: 200,
