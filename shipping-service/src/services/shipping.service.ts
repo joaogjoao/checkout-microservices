@@ -44,6 +44,7 @@ export class ShippingService implements OnModuleInit {
     private createShippingFromCheckout(checkout: CheckoutPaidEventDto): Shipping {
         const shipping: Shipping = this.repo.create({
             checkoutId: checkout.id,
+            status: ShippingStatus.SHIPPED,
             trackingCode: this.generateTrackingCode(),
             address: { ...checkout.address },
             shippedAt: new Date(),

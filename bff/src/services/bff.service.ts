@@ -50,7 +50,6 @@ export class BffService {
             );
             return data;
         } catch (error) {
-            console.error('Error fetching checkout:', error);
             return null;
         }
     }
