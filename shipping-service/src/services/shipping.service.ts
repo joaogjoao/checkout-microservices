@@ -31,6 +31,9 @@ export class ShippingService implements OnModuleInit {
         if (!shipping) {
             throw new Error('Shipping not found');
         }
+        if (shipping.status !== ShippingStatus.SHIPPED) {
+            throw new Error('Shipping is not in a valid state to be completed');
+        }
         shipping.deliveredAt = new Date();
         shipping.status = ShippingStatus.DELIVERED;
         await this.repo.save(shipping);

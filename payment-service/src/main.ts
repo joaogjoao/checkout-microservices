@@ -12,12 +12,11 @@ async function bootstrap() {
         brokers: [process.env.KAFKA_BOOTSTRAP_SERVERS ?? 'kafka:9092'],
       },
       consumer: {
-        groupId: 'payment-group',          // mesmo groupId que você definiu no ClientsModule
+        groupId: 'payment-group',
       },
     },
   });
 
-  // inicializa todos os microservices antes do HTTP
   await app.startAllMicroservices();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 

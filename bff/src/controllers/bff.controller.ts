@@ -31,7 +31,7 @@ export class BffController {
 
   @Post('shipping/:id/complete')
   @HttpCode(200)
-  completeShipping(@Param('id') id: string) {
+  completeShipping(@Param('id') id: string): Promise<string> {
     return this.bff.completeShipping(id);
   }
 
