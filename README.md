@@ -24,14 +24,14 @@ Criar uma API REST utilizando NestJS, seguindo uma arquitetura baseada em evento
 ## Projeto & Desenho da Solução
 
 1. **Arquitetura geral:**  
-   ![Arquitetura](docs/ArquiteturaBase.png)  
+   ![Arquitetura](docs/ArquiteturaBaseSVG.svg)  
    - Cada serviço roda isoladamente em sua própria rede Docker privada para segurança.
    - O **Checkout Service** atua como orquestrador do fluxo de compra, mantém algumas informações sobre o restante dos serviços para facilitar consulta.
    - BFF conecta Front‑end ⇄ microserviços via REST unificado.
     - OBS: Optei por fazer assim para simplificar a busca, mas poderia ter implementado no BFF uma chamada que consultasse os outros microserviços e reunisse as informações para devolver ao front
 
 2. **Fluxo de eventos (Diagrama de Sequência):**  
-   ![Sequência de Eventos](docs/DiagramaSequencia.png)  
+   ![Sequência de Eventos](docs/DiagramaSequenciaSVG.svg)  
    1. Front‑end → BFF → Checkout Service cria pedido.
    2. Checkout emite `checkout.created` → Payment Service.
    3. Payment processa e emite `payment.approved` ou `payment.rejected`.
