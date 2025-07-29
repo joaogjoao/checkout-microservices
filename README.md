@@ -109,7 +109,15 @@ Siga estes passos para validar todo o fluxo de ponta a ponta:
 1. **Importar a Collection**  
    - No Postman: **File → Import** → selecione `docs/APICollection.postman_collection.json`.
 
-2. **Executar as Requisições na Sequência**  
+2. **Estrutura da Collection**  
+   - **REJECTED**: Chamadas que vao ter pagamento rejeitado devido a logica de validação: Maximo 1000 de valor
+   - **APPROVED**: Chamadas que vao ter pagamento aprovado
+   - **BadRequest**: Chamadas com erro no formato
+   - Chamada do GET/ checkout/id - Devolve dados do checkout
+   - Chamada do POST/ shipping/id/complete que finaliza o processo de envio (caso chamado duas vezes para mesmo ShippingId retorna erro que o status não aceita a ação)
+
+
+3. **Executar as Requisições na Sequência**  
    1. **Create Checkout**  
       - Método: `POST http://localhost:3000/bff/checkout`  
       - Body: JSON com itens, endereço, etc.  
