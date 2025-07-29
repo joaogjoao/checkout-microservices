@@ -81,7 +81,7 @@ cd checkout-microservices
 # 2. Iniciar ambiente Docker
 docker-compose up --build -d 
 ```
-
+- OBS: para facilitar os testes eu removi os .env do gitignore, o que nao ocorre em um ambiente real
 ## Testes
 - O foco principal dos testes está no **Checkout Service**, que orquestra todo o fluxo de compra
 
@@ -96,9 +96,10 @@ npm install
 npm run test:cov
 ```
 
-## Documentação da API
+## Documentação
 - **BFF/Swagger**: http://localhost:3000/api-docs
-- **BFF**: http://localhost:3000/bff
+- **BFF**: http://localhost:3000/bff - endereço onde a API esta
+- **KAFKA UI**: http://localhost:8080 - endereço do Kafka UI para facilitar visualização dos tópicos -  pode ser desativado comentando no docker compose
 
 ---
 
