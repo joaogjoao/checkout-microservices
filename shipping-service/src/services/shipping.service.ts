@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClientKafka } from '@nestjs/microservices';
@@ -29,15 +29,17 @@ export class ShippingService implements OnModuleInit {
     async completeShipping(shippingId: string): Promise<string> {
         const shipping = await this.repo.findOneBy({ id: shippingId });
         if (!shipping) {
-            throw new Error('Shipping not found');
+            throw new NotFoundException('Shipping not found');
         }
         if (shipping.status !== ShippingStatus.SHIPPED) {
-            throw new Error('Shipping is not in a valid state to be completed');
+            throw new BadRequestException('Shipping is not in a valid state to be completed');
         }
+
         shipping.deliveredAt = new Date();
         shipping.status = ShippingStatus.DELIVERED;
         await this.repo.save(shipping);
         await this.emitShippingCompleted(shipping);
+
         return "Shipping completed successfully";
     }
 

@@ -1,10 +1,11 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, map } from 'rxjs';
 import { CreateCheckoutDto } from 'src/dtos/create-checkout.dto';
 import { CreateCheckoutResponseDto } from 'src/dtos/create-checkout-response.dto';
 import { CheckoutResponseDto } from 'src/dtos/checkout-response.dto';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class BffService {
@@ -54,10 +55,39 @@ export class BffService {
         }
     }
 
-    async completeShipping(id: string): Promise<string> {
+    async completeShippings(id: string): Promise<string> {
         const { data } = await firstValueFrom(
             this.http.post<string>(`${this.shippingUrl}/shipping/${id}/complete`, {}),
         );
         return data;
+    }
+    async completeShipping(id: string): Promise<string> {
+        try {
+            const data = await firstValueFrom(
+                this.http
+                    .post<{ message: string }>(`${this.shippingUrl}/shipping/${id}/complete`, {})
+                    .pipe(
+                        map(resp => resp.data.message),
+                        catchError((err: unknown) => {
+                            if (err instanceof AxiosError && err.response) {
+                                throw new HttpException(
+                                    err.response.data?.message ?? err.response.data,
+                                    err.response.status,
+                                );
+                            }
+                            throw new InternalServerErrorException(
+                                'Failed to complete shipping',
+                            );
+                        }),
+                    ),
+            );
+
+            return data;
+        } catch (e) {
+            if (e instanceof HttpException) {
+                throw e;
+            }
+            throw new InternalServerErrorException(e as any);
+        }
     }
 }
