@@ -14,6 +14,7 @@ import { Address } from 'src/domain/entities/address.entity';
 import { CheckoutStatus } from 'src/domain/enums/checkout-status.enum';
 import { ShippingStatus } from 'src/domain/enums/shipping-status.enum';
 import { ShippingEventDto } from 'src/domain/dtos/events/shipping-event.dto';
+import { CheckoutResponseDto } from 'src/domain/dtos/checkout-response.dto';
 
 @Injectable()
 export class CheckoutService implements OnModuleInit {
@@ -27,25 +28,47 @@ export class CheckoutService implements OnModuleInit {
     await this.kafkaClient.connect();
   }
 
-  async createCheckout(dto: CreateCheckoutDto): Promise<Checkout> {
-    const checkout = this.createCheckoutFromDto(dto);
+  async createCheckout(dto: CreateCheckoutDto): Promise<Checkout | null> {
+    try {
+      const checkout = this.createCheckoutFromDto(dto);
 
-    const saved = await this.repo.save(checkout);
+      const saved = await this.repo.save(checkout);
 
-    const message: CheckoutCreatedMessage = this.createCheckoutMessage(saved, dto);
+      const message: CheckoutCreatedMessage = this.createCheckoutMessage(saved, dto);
 
-    this.kafkaClient.emit('checkout.created', message);
+      this.kafkaClient.emit('checkout.created', message);
 
-    return saved;
+      return saved;
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      return null;
+    }
   }
 
-  async findById(id: string): Promise<Checkout> {
-    const checkout = await this.repo.findOne({
-      where: { id },
-      relations: ['items', 'address'],
-    });
-    if (!checkout) throw new NotFoundException(`Checkout ${id} não encontrado`);
-    return checkout;
+  async findById(id: string): Promise<CheckoutResponseDto> {
+    try {
+      const checkout = await this.repo.findOne({
+        where: { id },
+        relations: ['items', 'address'],
+      });
+      if (!checkout) throw new NotFoundException(`Checkout ${id} não encontrado`);
+
+      return {
+        id: checkout.id,
+        status: checkout.status,
+        total: checkout.total,
+        createdAt: checkout.createdAt,
+        closedAt: checkout.closedAt,
+        paymentStatus: checkout.paymentStatus,
+        shippingStatus: checkout.shippingStatus,
+        paymentFailureReason: checkout.paymentFailureReason,
+        shippingId: checkout.shippingId,
+        trackingCode: checkout.trackingCode,
+      };
+    } catch (error) {
+      console.error('Error finding checkout:', error);
+      throw new NotFoundException(`Checkout ${id} não encontrado`);
+    }
   }
 
   async handlePaymentRejected(event: PaymentRejectedEventDto): Promise<void> {

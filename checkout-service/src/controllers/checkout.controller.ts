@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, HttpException } from '@nestjs/common';
 import { CheckoutService } from '../services/checkout.service';
 import { CreateCheckoutDto } from '../domain/dtos/create-checkout.dto';
 
@@ -8,7 +8,14 @@ export class CheckoutController {
 
   @Post()
   async create(@Body() dto: CreateCheckoutDto) {
-    return this.service.createCheckout(dto);
+    if (!dto || !dto.items || dto.items.length === 0) {
+      throw new HttpException('Invalid checkout data', 400);
+    }
+    const response = await this.service.createCheckout(dto);
+    if (!response) {
+      throw new HttpException('Checkout creation failed', 500);
+    }
+    return response;
   }
 
   @Get(':id')

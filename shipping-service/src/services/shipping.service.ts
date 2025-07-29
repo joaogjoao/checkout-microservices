@@ -26,7 +26,7 @@ export class ShippingService implements OnModuleInit {
         await this.emitShippingCreated(saved);
     }
 
-    async completeShipping(shippingId: string): Promise<void> {
+    async completeShipping(shippingId: string): Promise<string> {
         const shipping = await this.repo.findOneBy({ id: shippingId });
         if (!shipping) {
             throw new Error('Shipping not found');
@@ -35,6 +35,7 @@ export class ShippingService implements OnModuleInit {
         shipping.status = ShippingStatus.DELIVERED;
         await this.repo.save(shipping);
         await this.emitShippingCompleted(shipping);
+        return "Shipping completed successfully";
     }
 
     private createShippingFromCheckout(checkout: CheckoutPaidEventDto): Shipping {
