@@ -75,7 +75,7 @@ Pré‑requisitos:
 
 ```bash
 # 1. Clonar repositório
-git clone https://github.com/SEU_USUARIO/checkout-microservices.git
+git clone https://github.com/joaogjoao/checkout-microservices.git
 cd checkout-microservices
 
 # 2. Iniciar ambiente Docker
