@@ -55,12 +55,6 @@ export class BffService {
         }
     }
 
-    async completeShippings(id: string): Promise<string> {
-        const { data } = await firstValueFrom(
-            this.http.post<string>(`${this.shippingUrl}/shipping/${id}/complete`, {}),
-        );
-        return data;
-    }
     async completeShipping(id: string): Promise<string> {
         try {
             const data = await firstValueFrom(
