@@ -51,17 +51,17 @@ services:
       - kafka_data:/bitnami
 
   # Interface Web para Kafka (Kafka UI)
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    depends_on:
-      - kafka
-    environment:
-      - KAFKA_CLUSTERS_0_NAME=kafka-cluster
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
-    ports:
-      - "8080:8080"
-    networks:
-      - kafka-net
+  # kafka-ui:
+  #   image: provectuslabs/kafka-ui:latest
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     - KAFKA_CLUSTERS_0_NAME=kafka-cluster
+  #     - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - kafka-net
 
   # Banco de dados do Checkout (PostgreSQL)
   checkout-db:
@@ -83,6 +83,7 @@ services:
     depends_on:
       - checkout-db
       - kafka
+    command: ["/wait-for-it.sh", "kafka:9092", "--", "node", "dist/main.js"]
     env_file:
       - ./checkout-service/.env
     ports:
@@ -109,6 +110,7 @@ services:
     depends_on:
       - payment-db
       - kafka
+    command: ["/wait-for-it.sh", "kafka:9092", "--", "node", "dist/main.js"]
     env_file:
       - ./payment-service/.env
     ports:
@@ -135,6 +137,7 @@ services:
     depends_on:
       - shipping-db
       - kafka
+    command: ["/wait-for-it.sh", "kafka:9092", "--", "node", "dist/main.js"]
     env_file:
       - ./shipping-service/.env
     ports:
